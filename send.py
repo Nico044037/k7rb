@@ -5,7 +5,8 @@ from discord import app_commands
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = 1470045879145857066
-Ip = os.getenv("Ip") # (only if in minecraft server)
+Ip = os.getenv("Ip")  # Minecraft server IP
+
 # ======================
 # INTENTS
 # ======================
@@ -83,6 +84,24 @@ async def send(ctx):
     await ctx.send(embed=rules_embed())
 
 # ==================================================
+# 🌍 IP COMMAND (?ip and !ip)
+# ==================================================
+@bot.command(name="ip")
+async def ip(ctx):
+    if not Ip:
+        await ctx.send("❌ Server IP is not set.")
+        return
+
+    embed = discord.Embed(
+        title="🌍 Minecraft Server IP",
+        description=f"```{Ip}```",
+        color=discord.Color.green()
+    )
+    embed.set_footer(text="Copy & paste into Minecraft")
+
+    await ctx.send(embed=embed)
+
+# ==================================================
 # 🔨 MODERATION COMMANDS
 # ==================================================
 
@@ -145,7 +164,6 @@ async def purge(ctx, amount: int):
 # 📋 LOGGING EVENTS
 # ==================================================
 
-# ===== ROLE CHANGE LOG =====
 @bot.event
 async def on_member_update(before: discord.Member, after: discord.Member):
     if before.guild.id != GUILD_ID:
@@ -158,24 +176,16 @@ async def on_member_update(before: discord.Member, after: discord.Member):
     before_roles = set(before.roles)
     after_roles = set(after.roles)
 
-    added_roles = after_roles - before_roles
-    removed_roles = before_roles - after_roles
-
-    for role in added_roles:
+    for role in after_roles - before_roles:
         await log_channel.send(
-            f"➕ **Role Added**\n"
-            f"👤 User: {after.mention}\n"
-            f"🏷️ Role: {role.mention}"
+            f"➕ **Role Added**\n👤 User: {after.mention}\n🏷️ Role: {role.mention}"
         )
 
-    for role in removed_roles:
+    for role in before_roles - after_roles:
         await log_channel.send(
-            f"➖ **Role Removed**\n"
-            f"👤 User: {after.mention}\n"
-            f"🏷️ Role: {role.mention}"
+            f"➖ **Role Removed**\n👤 User: {after.mention}\n🏷️ Role: {role.mention}"
         )
 
-# ===== MESSAGE DELETE LOG =====
 @bot.event
 async def on_message_delete(message: discord.Message):
     if not message.guild or message.guild.id != GUILD_ID:
@@ -201,4 +211,3 @@ if not TOKEN:
     raise RuntimeError("DISCORD_TOKEN environment variable not set")
 
 bot.run(TOKEN)
-
