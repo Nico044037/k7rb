@@ -4,7 +4,7 @@ from discord.ext import commands
 from discord import app_commands
 
 TOKEN = os.getenv("DISCORD_TOKEN")
-GUILD_ID = 1452967364470505565
+GUILD_ID = 1470045879145857066
 
 # ======================
 # INTENTS
@@ -66,7 +66,6 @@ async def on_ready():
 async def on_member_join(member: discord.Member):
     if member.guild.id != GUILD_ID:
         return
-
     try:
         await member.send(embed=rules_embed())
     except discord.Forbidden:
@@ -119,6 +118,29 @@ async def role(ctx, action: str, member: discord.Member, role: discord.Role):
     except discord.Forbidden:
         await ctx.send("❌ I can’t manage that role (role hierarchy issue).")
 
+# ===== PURGE =====
+@bot.command()
+@commands.has_permissions(manage_messages=True)
+async def purge(ctx, amount: int):
+    if amount < 1:
+        await ctx.send("❌ You must delete at least 1 message.")
+        return
+
+    if amount > 100:
+        await ctx.send("❌ You can only delete up to 100 messages at once.")
+        return
+
+    deleted = await ctx.channel.purge(limit=amount + 1)
+
+    log_channel = get_log_channel(ctx.guild)
+    if log_channel:
+        await log_channel.send(
+            f"🧹 **Messages Purged**\n"
+            f"👤 Moderator: {ctx.author.mention}\n"
+            f"📍 Channel: {ctx.channel.mention}\n"
+            f"🗑️ Amount: {len(deleted) - 1}"
+        )
+
 # ==================================================
 # 📋 LOGGING EVENTS
 # ==================================================
@@ -158,7 +180,6 @@ async def on_member_update(before: discord.Member, after: discord.Member):
 async def on_message_delete(message: discord.Message):
     if not message.guild or message.guild.id != GUILD_ID:
         return
-
     if message.author.bot:
         return
 
