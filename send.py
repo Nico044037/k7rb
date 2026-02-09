@@ -5,7 +5,7 @@ from discord import app_commands
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = 1470045879145857066
-
+Ip = os.getenv("Ip") # (only if in minecraft server)
 # ======================
 # INTENTS
 # ======================
@@ -201,3 +201,4 @@ if not TOKEN:
     raise RuntimeError("DISCORD_TOKEN environment variable not set")
 
 bot.run(TOKEN)
+
